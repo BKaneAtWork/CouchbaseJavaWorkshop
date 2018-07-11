@@ -25,8 +25,8 @@ import rx.Observable;
 
 import static com.couchbase.client.java.query.Select.select;
 
-public class MainLab {
-
+public class MainLabBK {
+	
 	public static final String CMD_QUIT = "quit";
 	public static final String CMD_CREATE = "create";
 	public static final String CMD_READ = "read";
@@ -39,16 +39,16 @@ public class MainLab {
 	public static final String CMD_BULK_WRITE = "bulkwrite";
 	public static final String CMD_BULK_WRITE_SYNC = "bulkwritesync";
 	public static final String CMD_SEARCH = "search";
-
+	
 	private static Bucket bucket = null;
 
-	public static void main(String[] args) {
+	public static void main(String[] args) { 
 		Scanner scanner = new Scanner(System.in);
 		initConnection();
 		welcome();
 		usage();
 		String cmdLn = null;
-		while (!CMD_QUIT.equalsIgnoreCase(cmdLn)) {
+		while(!CMD_QUIT.equalsIgnoreCase(cmdLn)){
 			try {
 				System.out.print("# ");
 				cmdLn = scanner.nextLine();
@@ -60,27 +60,20 @@ public class MainLab {
 		scanner.close();
 	}
 
-	private static void initConnection() {
+	private static void initConnection(){
 		String clusterAddress = System.getProperty("cbworkshop.clusteraddress");
 		String user = System.getProperty("cbworkshop.user");
 		String password = System.getProperty("cbworkshop.password");
 		String bucketName = System.getProperty("cbworkshop.bucket");
 
-		CouchbaseEnvironment env = DefaultCouchbaseEnvironment.builder()
-				.socketConnectTimeout(15000)
-				.connectTimeout(15000)
-				.kvTimeout(15000)
-				.build();
+		//TODO Lab 3: create environment, connect to cluster, open bucket
 
-		Cluster cluster = CouchbaseCluster.create(env, clusterAddress);
-		cluster.authenticate(user, password);
-		bucket = cluster.openBucket(bucketName);
 	}
-
+	
 	private static void process(String cmdLn) {
 		String words[] = cmdLn.split(" ");
-
-		switch (words[0].toLowerCase()) {
+		
+		switch(words[0].toLowerCase()){
 		case CMD_QUIT:
 			System.out.println("bye!");
 			break;
@@ -108,20 +101,20 @@ public class MainLab {
 		case CMD_QUERY_AIRPORTS:
 			queryAirports(words);
 			break;
-		case CMD_BULK_WRITE:
+		case CMD_BULK_WRITE:	
 			bulkWrite(words);
 			break;
-		case CMD_BULK_WRITE_SYNC:
+		case CMD_BULK_WRITE_SYNC:	
 			bulkWriteSync(words);
 			break;
-		case CMD_SEARCH:
+		case CMD_SEARCH:	
 			search(words);
 			break;
 		case "":
 			// do nothing
 			break;
 		default:
-			usage();
+			usage();					
 		}
 	}
 
@@ -133,33 +126,41 @@ public class MainLab {
 				.put("timestamp", System.currentTimeMillis())
 			    .put("from", from)
 			    .put("to", to);
-		json.put("type", "msg");
-		//bucket.insert(JsonDocument.create(key, json));
-		bucket.upsert(JsonDocument.create(key, json));
-		System.out.println("Document created with key: " + key);
+
+		//Lab 4: add type attribute to JSON doc and insert/upsert to bucket
+
+		System.out.println("Document created with key: " + key);	
 	}
 
 	private static void read(String[] words) {
 		String key = words[1];
-		JsonDocument doc = bucket.get(key);
-		System.out.println(doc.content().toString());
+		
+		//Lab 5: read document for the specified key from bucket into JsonDocument doc,
+		//then write it to STDOUT
+		
+		//System.out.println(doc.content().toString());
+		
 	}
-
+	
 	private static void update(String[] words) {
 		String key = "airline_" + words[1];
-		JsonDocument doc = bucket.get(key);
-		String name = doc.content().getString("name");
-		doc.content().put("name", name.toUpperCase());
-		bucket.replace(doc);
-	}
 
+		//Lab 6: read the document for the key, modify attribute “name” to UPPERCASE the value, 
+		//then use replace to modify the document
+
+	}
+	
 	private static void delete(String[] words) {
 		String key = "msg::" + words[1];
-		bucket.remove(key);
+		
+		//Lab 7:
+		 
 	}
-
+	
 	private static void subdoc(String[] words) {
 
+		//Lab 8:
+		 
 	}
 
 	private static void query(String[] words) {
@@ -168,34 +169,38 @@ public class MainLab {
 
 	private static void queryAsync(String[] words) {
 
-	}
 
+	}
+	
 	private static void queryAirports(String[] words) {
 
 	}
-
+	
 	private static void bulkWrite(String[] words) {
+		
 
 	}
 
 	private static void bulkWriteSync(String[] words) {
+		
 
 	}
-
+	
 	private static void search(String[] words) {
 
 	}
-
+	
+	
 	private static void welcome() {
 		System.out.println("Welcome to CouchbaseJavaWorkshop!");
 	}
-
+	
 	private static void usage() {
-		System.out.println("Usage options: \n\n" + CMD_CREATE + " [key from to] \n" + CMD_READ + " [key] \n"
-				+ CMD_UPDATE + " [airline_key] \n" + CMD_SUBDOC + " [msg_key] \n" + CMD_DELETE + " [msg_key] \n"
-				+ CMD_QUERY + " \n" + CMD_QUERY_AIRPORTS + " [sourceairport destinationairport] \n" + CMD_QUERY_ASYNC
-				+ " \n" + CMD_BULK_WRITE + " [size] \n" + CMD_BULK_WRITE_SYNC + " [size] \n" + CMD_SEARCH + " [term] \n"
-				+ CMD_QUIT);
+		System.out.println("Usage options: \n\n" + CMD_CREATE + " [key from to] \n" + CMD_READ + " [key] \n" 
+				+ CMD_UPDATE + " [airline_key] \n" + CMD_SUBDOC + " [msg_key] \n" + CMD_DELETE + " [msg_key] \n" 
+				+ CMD_QUERY + " \n" + CMD_QUERY_AIRPORTS + " [sourceairport destinationairport] \n"
+				+ CMD_QUERY_ASYNC +  " \n" + CMD_BULK_WRITE + " [size] \n" + CMD_BULK_WRITE_SYNC + " [size] \n"
+				+ CMD_SEARCH + " [term] \n"+ CMD_QUIT);		
 	}
 
 }

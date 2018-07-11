@@ -132,8 +132,8 @@ public class MainLabSolution {
 		JsonObject json = JsonObject.create()
 				.put("timestamp", System.currentTimeMillis())
 			    .put("from", from)
-			    .put("to", to)
-			    .put("type", "msg");
+			    .put("to", to);
+		json.put("type", "msg");
 		bucket.insert(JsonDocument.create(key, json));
 		//bucket.upsert(JsonDocument.create(key, json));
 		System.out.println("Document created with key: " + key);
