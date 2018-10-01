@@ -100,10 +100,7 @@ public class MainLabSolution {
 			delete(words);
 			break;
 		case CMD_QUERY:
-			query(words);
-			break;
-		case CMD_QUERY_ASYNC:
-			queryAsync(words);
+			query();
 			break;
 		case CMD_QUERY_AIRPORTS:
 			queryAirports(words);
@@ -113,6 +110,9 @@ public class MainLabSolution {
 			break;
 		case CMD_BULK_WRITE_SYNC:	
 			bulkWriteSync(words);
+			break;
+		case CMD_QUERY_ASYNC:
+			queryAsync(words);
 			break;
 		case CMD_SEARCH:	
 			search(words);
@@ -146,15 +146,20 @@ public class MainLabSolution {
 	}
 	
 	private static void update(String[] words) {
-		String key = "airline_" + words[1];
+		String key = words[1];
 		JsonDocument doc = bucket.get(key);
 		String name = doc.content().getString("name");
 		doc.content().put("name", name.toUpperCase());
 		bucket.replace(doc);
 	}
 	
+	private static void delete(String[] words) {
+		String key = words[1];
+		bucket.remove(key);
+	}
+	
 	private static void subdoc(String[] words) {
-		String key = "msg::" + words[1];
+		String key = words[1];
 		DocumentFragment<Mutation> result = bucket
 				.mutateIn(key)
 				.replace("from", "Administrator")
@@ -162,12 +167,7 @@ public class MainLabSolution {
 				.execute();
 	}
 
-	private static void delete(String[] words) {
-		String key = "msg::" + words[1];
-		bucket.remove(key);
-	}
-	
-	private static void query(String[] words) {
+	private static void query() {
 		//N1qlQueryResult queryResult = bucket.query(N1qlQuery.simple("SELECT * FROM `travel-sample` LIMIT 10"));
 		N1qlQueryResult queryResult = bucket.query(select("*").from("`travel-sample`").limit(10));
 		for(N1qlQueryRow row : queryResult){
@@ -175,34 +175,15 @@ public class MainLabSolution {
 		}
 	}
 
-	private static void queryAsync(String[] words) {
-
-		bucket.async()
-			.query(N1qlQuery.simple(select("*").from("`travel-sample`").limit(5)))
-			.subscribe(result -> {
-				result.errors()
-					.subscribe(
-							e -> System.err.println("N1QL Error/Warning: " + e),
-							runtimeError -> runtimeError.printStackTrace()
-					);
-				result.rows()
-					.map(row -> row.value())
-					.subscribe(
-							rowContent -> System.out.println(rowContent),
-							runtimeError -> runtimeError.printStackTrace()
-					);
-			});
-	}
-	
 	private static void queryAirports(String[] words) {
 		String sourceairport = words[1];
 		String destinationairport = words[2];
-		String queryStr = "SELECT a.name FROM `travel-sample` r JOIN `travel-sample` a ON KEYS r.airlineid " +
-				"WHERE r.type=\"route\" AND r.sourceairport=$src AND r.destinationairport=$dst";
-		
 		JsonObject params = JsonObject.create()
 				.put("src", sourceairport)
 				.put("dst", destinationairport);
+		
+		String queryStr = "SELECT a.name FROM `travel-sample` r JOIN `travel-sample` a ON KEYS r.airlineid " +
+				"WHERE r.type=\"route\" AND r.sourceairport=$src AND r.destinationairport=$dst";
 		
 		N1qlQuery query = N1qlQuery.parameterized(queryStr, params);
 		
@@ -219,7 +200,7 @@ public class MainLabSolution {
 		System.out.println("Deleting messages ..." );
 		bucket.query(N1qlQuery.simple("DELETE FROM `travel-sample` WHERE type=\"msg\""));
 		
-		System.out.println("Writting " +size  + " messages");
+		System.out.println("Writing " +size  + " messages");
 		List<JsonDocument> docs = new ArrayList<JsonDocument>();
 		for(int i = 0; i < size; i++){
 			JsonObject json = JsonObject.create()
@@ -246,7 +227,7 @@ public class MainLabSolution {
 		System.out.println("Deleting messages ..." );
 		bucket.query(N1qlQuery.simple("DELETE FROM `travel-sample` WHERE type=\"msg\""));
 		
-		System.out.println("Writting " +size  + " messages");
+		System.out.println("Writing " +size  + " messages");
 		List<JsonDocument> docs = new ArrayList<JsonDocument>();
 		for(int i = 0; i < size; i++){
 			JsonObject json = JsonObject.create()
@@ -263,13 +244,34 @@ public class MainLabSolution {
 		System.out.println("Time elapsed " + (System.currentTimeMillis() - ini) + " ms");
 	}
 	
+	private static void queryAsync(String[] words) {
+
+		bucket.async()
+			.query(N1qlQuery.simple(select("*").from("`travel-sample`").limit(5)))
+			.subscribe(result -> {
+				result.errors()
+					.subscribe(
+							e -> System.err.println("N1QL Error/Warning: " + e),
+							runtimeError -> runtimeError.printStackTrace()
+					);
+				result.rows()
+					.map(row -> row.value())
+					.subscribe(
+							rowContent -> System.out.println(rowContent),
+							runtimeError -> runtimeError.printStackTrace()
+					);
+			});
+	}
+	
 	private static void search(String[] words) {
 		String term = words[1];
+
 		MatchQuery fts = SearchQuery.match(term);
 		SearchQueryResult result = bucket.query(new SearchQuery("sidx_hotel_desc", fts));
 		for (SearchQueryRow row : result) {
 		    System.out.println(row);
 		}
+		
 	}
 	
 	
@@ -281,8 +283,8 @@ public class MainLabSolution {
 		System.out.println("Usage options: \n\n" + CMD_CREATE + " [key from to] \n" + CMD_READ + " [key] \n" 
 				+ CMD_UPDATE + " [airline_key] \n" + CMD_SUBDOC + " [msg_key] \n" + CMD_DELETE + " [msg_key] \n" 
 				+ CMD_QUERY + " \n" + CMD_QUERY_AIRPORTS + " [sourceairport destinationairport] \n"
-				+ CMD_QUERY_ASYNC +  " \n" + CMD_BULK_WRITE + " [size] \n" + CMD_BULK_WRITE_SYNC + " [size] \n"
-				+ CMD_SEARCH + " [term] \n"+ CMD_QUIT);		
+				+ CMD_BULK_WRITE + " [size] \n" + CMD_BULK_WRITE_SYNC + " [size] \n"
+				+ CMD_QUERY_ASYNC +  " \n" + CMD_SEARCH + " [term] \n"+ CMD_QUIT);		
 	}
 
 }

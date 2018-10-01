@@ -26,7 +26,7 @@ import rx.Observable;
 import static com.couchbase.client.java.query.Select.select;
 
 public class MainLab {
-
+	
 	public static final String CMD_QUIT = "quit";
 	public static final String CMD_CREATE = "create";
 	public static final String CMD_READ = "read";
@@ -39,16 +39,16 @@ public class MainLab {
 	public static final String CMD_BULK_WRITE = "bulkwrite";
 	public static final String CMD_BULK_WRITE_SYNC = "bulkwritesync";
 	public static final String CMD_SEARCH = "search";
-
+	
 	private static Bucket bucket = null;
 
-	public static void main(String[] args) {
+	public static void main(String[] args) { 
 		Scanner scanner = new Scanner(System.in);
 		initConnection();
 		welcome();
 		usage();
 		String cmdLn = null;
-		while (!CMD_QUIT.equalsIgnoreCase(cmdLn)) {
+		while(!CMD_QUIT.equalsIgnoreCase(cmdLn)){
 			try {
 				System.out.print("# ");
 				cmdLn = scanner.nextLine();
@@ -60,27 +60,20 @@ public class MainLab {
 		scanner.close();
 	}
 
-	private static void initConnection() {
+	private static void initConnection(){
 		String clusterAddress = System.getProperty("cbworkshop.clusteraddress");
 		String user = System.getProperty("cbworkshop.user");
 		String password = System.getProperty("cbworkshop.password");
 		String bucketName = System.getProperty("cbworkshop.bucket");
 
-		CouchbaseEnvironment env = DefaultCouchbaseEnvironment.builder()
-				.socketConnectTimeout(15000)
-				.connectTimeout(15000)
-				.kvTimeout(15000)
-				.build();
+		//TODO: Lab 3: create environment, connect to cluster, open bucket
 
-		Cluster cluster = CouchbaseCluster.create(env, clusterAddress);
-		cluster.authenticate(user, password);
-		bucket = cluster.openBucket(bucketName);
 	}
-
+	
 	private static void process(String cmdLn) {
 		String words[] = cmdLn.split(" ");
-
-		switch (words[0].toLowerCase()) {
+		
+		switch(words[0].toLowerCase()){
 		case CMD_QUIT:
 			System.out.println("bye!");
 			break;
@@ -100,28 +93,28 @@ public class MainLab {
 			delete(words);
 			break;
 		case CMD_QUERY:
-			query(words);
-			break;
-		case CMD_QUERY_ASYNC:
-			queryAsync(words);
+			query();
 			break;
 		case CMD_QUERY_AIRPORTS:
 			queryAirports(words);
 			break;
-		case CMD_BULK_WRITE:
+		case CMD_BULK_WRITE:	
 			bulkWrite(words);
 			break;
-		case CMD_BULK_WRITE_SYNC:
+		case CMD_BULK_WRITE_SYNC:	
 			bulkWriteSync(words);
 			break;
-		case CMD_SEARCH:
+		case CMD_QUERY_ASYNC:
+			queryAsync(words);
+			break;
+		case CMD_SEARCH:	
 			search(words);
 			break;
 		case "":
 			// do nothing
 			break;
 		default:
-			usage();
+			usage();					
 		}
 	}
 
@@ -133,69 +126,137 @@ public class MainLab {
 				.put("timestamp", System.currentTimeMillis())
 			    .put("from", from)
 			    .put("to", to);
-		json.put("type", "msg");
-		//bucket.insert(JsonDocument.create(key, json));
-		bucket.upsert(JsonDocument.create(key, json));
-		System.out.println("Document created with key: " + key);
+
+		//TODO: Lab 4: add type attribute to JSON doc and insert/upsert to bucket
+
+		System.out.println("Document created with key: " + key);	
 	}
 
 	private static void read(String[] words) {
 		String key = words[1];
-		JsonDocument doc = bucket.get(key);
-		System.out.println(doc.content().toString());
+		
+		//TODO: Lab 5: read document for the specified key from bucket into JsonDocument doc,
+		//then write it to STDOUT
+		
+		//System.out.println(doc.content().toString());
+		
 	}
-
+	
 	private static void update(String[] words) {
-		String key = "airline_" + words[1];
-		JsonDocument doc = bucket.get(key);
-		String name = doc.content().getString("name");
-		doc.content().put("name", name.toUpperCase());
-		bucket.replace(doc);
-	}
+		String key = words[1];
 
+		//TODO: Lab 6: read the document for the key, modify attribute “name” to UPPERCASE the value, 
+		//then use replace to modify the document
+
+	}
+	
 	private static void delete(String[] words) {
-		String key = "msg::" + words[1];
-		bucket.remove(key);
+		String key = words[1];
+		
+		//TODO: Lab 7: delete the document for the key
+		 
 	}
-
+	
 	private static void subdoc(String[] words) {
+		String key = words[1];
 
+		//TODO: Lab 8: In the document for the key, change the actual value of the “from” attribute
+		//to “Administrator”, and add a new attribute: “reviewed”, with value CurrentTimeMillis
+
+		
 	}
 
-	private static void query(String[] words) {
-
-	}
-
-	private static void queryAsync(String[] words) {
-
+	private static void query() {
+		
+		//TODO: Lab 9: Execute the query: “SELECT * FROM `travel-sample` LIMIT 10”
+		//Print the results to STDOUT.  Try both raw and DSL implementations.  
+		
 	}
 
 	private static void queryAirports(String[] words) {
+		String sourceairport = words[1];
+		String destinationairport = words[2];
+		JsonObject params = JsonObject.create()
+				.put("src", sourceairport)
+				.put("dst", destinationairport);
+		
+		//TODO: Lab 10: Write a parameterized query with a join to find airlines flying from 
+		//sourceairport to destinationairport, and print the results to STDOUT.
 
 	}
-
+	
 	private static void bulkWrite(String[] words) {
+		int size = Integer.parseInt(words[1]);
+		
+		System.out.println("Deleting messages ..." );
 
+		//TODO: Lab 11A: delete all docs of type=msg from travel-sample bucket
+		
+		System.out.println("Writing " +size  + " messages");
+		List<JsonDocument> docs = new ArrayList<JsonDocument>();
+		for(int i = 0; i < size; i++){
+			JsonObject json = JsonObject.create()
+					.put("timestamp", System.currentTimeMillis())
+				    .put("from", "me")
+				    .put("to", "you")
+				    .put("type", "msg");
+			docs.add(JsonDocument.create("msg::" + i, json));
+		}
+		long ini = System.currentTimeMillis();
+
+		//TODO: Lab 11A: asynchronously insert all of the message documents in the docs list
+
+		System.out.println("Time elapsed " + (System.currentTimeMillis() - ini) + " ms");
 	}
 
 	private static void bulkWriteSync(String[] words) {
+		int size = Integer.parseInt(words[1]);
+		
+		System.out.println("Deleting messages ..." );
+
+		//TODO: Lab 11B: delete all docs of type=msg from travel-sample bucket
+		
+		System.out.println("Writing " +size  + " messages");
+		List<JsonDocument> docs = new ArrayList<JsonDocument>();
+		for(int i = 0; i < size; i++){
+			JsonObject json = JsonObject.create()
+					.put("timestamp", System.currentTimeMillis())
+				    .put("from", "me")
+				    .put("to", "you")
+				    .put("type", "msg");
+			docs.add(JsonDocument.create("msg::" + i, json));
+		}
+		long ini = System.currentTimeMillis();
+
+		//TODO: Lab 11B: synchronously insert all of the message documents in the docs list
+
+		System.out.println("Time elapsed " + (System.currentTimeMillis() - ini) + " ms");
+	}
+	
+	private static void queryAsync(String[] words) {
+
+		//TODO: Lab 12: 
 
 	}
-
+	
 	private static void search(String[] words) {
+		String term = words[1];
+	
+		//TODO: Lab 14: Write code to search using the index sidx_hotel_desc for the 
+		//search term and print results to STDOUT
 
 	}
-
+	
 	private static void welcome() {
 		System.out.println("Welcome to CouchbaseJavaWorkshop!");
 	}
-
+	
 	private static void usage() {
-		System.out.println("Usage options: \n\n" + CMD_CREATE + " [key from to] \n" + CMD_READ + " [key] \n"
-				+ CMD_UPDATE + " [airline_key] \n" + CMD_SUBDOC + " [msg_key] \n" + CMD_DELETE + " [msg_key] \n"
-				+ CMD_QUERY + " \n" + CMD_QUERY_AIRPORTS + " [sourceairport destinationairport] \n" + CMD_QUERY_ASYNC
-				+ " \n" + CMD_BULK_WRITE + " [size] \n" + CMD_BULK_WRITE_SYNC + " [size] \n" + CMD_SEARCH + " [term] \n"
-				+ CMD_QUIT);
+		System.out.println("Usage options: \n\n" + CMD_CREATE + " [key from to] \n" + CMD_READ + " [key] \n" 
+				+ CMD_UPDATE + " [airline_key] \n" + CMD_SUBDOC + " [msg_key] \n" + CMD_DELETE + " [msg_key] \n" 
+				+ CMD_QUERY + " \n" + CMD_QUERY_AIRPORTS + " [sourceairport destinationairport] \n"
+				+ CMD_BULK_WRITE + " [size] \n" + CMD_BULK_WRITE_SYNC + " [size] \n"
+				+ CMD_QUERY_ASYNC +  " \n" + CMD_SEARCH + " [term] \n"+ CMD_QUIT);		
 	}
 
 }
