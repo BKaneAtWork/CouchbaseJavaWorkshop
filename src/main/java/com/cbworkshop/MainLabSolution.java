@@ -69,7 +69,9 @@ public class MainLabSolution {
 		CouchbaseEnvironment env = DefaultCouchbaseEnvironment.builder()
                 .socketConnectTimeout(15000)
                 .connectTimeout(15000) 
-                .kvTimeout(15000)
+				.kvTimeout(15000)
+				.continuousKeepAliveEnabled(true)  // to keep connection active, per https://issues.couchbase.com/browse/JCBC-1199
+				.keepAliveInterval(10000)
                 .build();
 	
 		Cluster cluster = CouchbaseCluster.create(env, clusterAddress);
@@ -183,7 +185,7 @@ public class MainLabSolution {
 				.put("dst", destinationairport);
 		
 		String queryStr = "SELECT a.name FROM `travel-sample` r JOIN `travel-sample` a ON KEYS r.airlineid " +
-				"WHERE r.type=\"route\" AND r.sourceairport=$src AND r.destinationairport=$dst";
+				"WHERE r.type='route' AND r.sourceairport=$src AND r.destinationairport=$dst";
 		
 		N1qlQuery query = N1qlQuery.parameterized(queryStr, params);
 		
@@ -198,7 +200,7 @@ public class MainLabSolution {
 		int size = Integer.parseInt(words[1]);
 		
 		System.out.println("Deleting messages ..." );
-		bucket.query(N1qlQuery.simple("DELETE FROM `travel-sample` WHERE type=\"msg\""));
+		bucket.query(N1qlQuery.simple("DELETE FROM `travel-sample` WHERE type='msg'"));
 		
 		System.out.println("Writing " +size  + " messages");
 		List<JsonDocument> docs = new ArrayList<JsonDocument>();
@@ -225,7 +227,7 @@ public class MainLabSolution {
 		int size = Integer.parseInt(words[1]);
 		
 		System.out.println("Deleting messages ..." );
-		bucket.query(N1qlQuery.simple("DELETE FROM `travel-sample` WHERE type=\"msg\""));
+		bucket.query(N1qlQuery.simple("DELETE FROM `travel-sample` WHERE type='msg'"));
 		
 		System.out.println("Writing " +size  + " messages");
 		List<JsonDocument> docs = new ArrayList<JsonDocument>();
@@ -241,7 +243,7 @@ public class MainLabSolution {
 		for(JsonDocument doc : docs){
 			bucket.insert(doc);
 		}
-		System.out.println("Time elapsed " + (System.currentTimeMillis() - ini) + " ms");
+		System.out.println("Time elapsed for insert " + (System.currentTimeMillis() - ini) + " ms");
 	}
 	
 	private static void queryAsync(String[] words) {

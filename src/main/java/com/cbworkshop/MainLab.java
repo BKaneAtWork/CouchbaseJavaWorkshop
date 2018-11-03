@@ -206,7 +206,7 @@ public class MainLab {
 
 		//TODO: Lab 11A: asynchronously insert all of the message documents in the docs list
 
-		System.out.println("Time elapsed " + (System.currentTimeMillis() - ini) + " ms");
+		System.out.println("Time elapsed for insert " + (System.currentTimeMillis() - ini) + " ms");
 	}
 
 	private static void bulkWriteSync(String[] words) {
@@ -230,7 +230,7 @@ public class MainLab {
 
 		//TODO: Lab 11B: synchronously insert all of the message documents in the docs list
 
-		System.out.println("Time elapsed " + (System.currentTimeMillis() - ini) + " ms");
+		System.out.println("Time elapsed for insert " + (System.currentTimeMillis() - ini) + " ms");
 	}
 	
 	private static void queryAsync(String[] words) {
