@@ -67,10 +67,11 @@ public class MainLabSolution {
 		String bucketName = System.getProperty("cbworkshop.bucket");
 		
 		CouchbaseEnvironment env = DefaultCouchbaseEnvironment.builder()
-                .socketConnectTimeout(15000)
+				.operationTracingEnabled(false)    // disable RTO/Threshold Logging for now, per https://docs.couchbase.com/java-sdk/2.7/threshold-logging.html
+				.socketConnectTimeout(15000)
                 .connectTimeout(15000) 
 				.kvTimeout(15000)
-				.continuousKeepAliveEnabled(true)  // to keep connection active, per https://issues.couchbase.com/browse/JCBC-1199
+				.continuousKeepAliveEnabled(true)  // to keep connection active after FTS query, per https://issues.couchbase.com/browse/JCBC-1199
 				.keepAliveInterval(10000)
                 .build();
 	
