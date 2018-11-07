@@ -171,10 +171,16 @@ public class MainLabSolution {
 	}
 
 	private static void query() {
-		//N1qlQueryResult queryResult = bucket.query(N1qlQuery.simple("SELECT * FROM `travel-sample` LIMIT 10"));
-		N1qlQueryResult queryResult = bucket.query(select("*").from("`travel-sample`").limit(10));
+		N1qlQueryResult queryResult;
+		// Raw
+		queryResult = bucket.query(N1qlQuery.simple("SELECT * FROM `travel-sample` LIMIT 10"));
 		for(N1qlQueryRow row : queryResult){
-			System.out.println(row.value().toString());
+			System.out.println("Raw " + row.value().toString());
+		}
+		// DSL
+		queryResult = bucket.query(select("*").from("`travel-sample`").limit(10));
+		for(N1qlQueryRow row : queryResult){
+			System.out.println("DSL " + row.value().toString());
 		}
 	}
 
