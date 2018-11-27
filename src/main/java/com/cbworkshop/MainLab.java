@@ -16,10 +16,12 @@ import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.N1qlQueryResult;
 import com.couchbase.client.java.query.N1qlQueryRow;
 import com.couchbase.client.java.search.SearchQuery;
-import com.couchbase.client.java.search.queries.MatchQuery;
+import com.couchbase.client.java.search.queries.*;
 import com.couchbase.client.java.search.result.SearchQueryResult;
 import com.couchbase.client.java.search.result.SearchQueryRow;
 import com.couchbase.client.java.subdoc.DocumentFragment;
+import com.couchbase.client.java.error.*;
+import com.couchbase.client.java.error.subdoc.*;
 
 import rx.Observable;
 
@@ -235,7 +237,8 @@ public class MainLab {
 	
 	private static void queryAsync(String[] words) {
 
-		//TODO: Lab 12: 
+		//TODO: Lab 12: Execute the query: "SELECT * FROM `travel-sample` LIMIT 5" 
+		//using asynchronous implementation and print the results to STDOUT 
 
 	}
 	
